@@ -1,0 +1,52 @@
+site_name: pdf-converter
+repo_url: https://github.com/varigg/pdf-converter
+site_url: https://varigg.github.io/pdf-converter
+site_description: A command line utility to summarize PDF files.
+site_author: Steffen Vulpius
+edit_uri: edit/main/docs/
+repo_name: varigg/pdf-converter
+copyright: Maintained by <a href="https://varigg.com">varigg</a>.
+
+nav:
+  - Home: index.md
+  - Modules: modules.md
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: ["src/pdf_converter"]
+theme:
+  name: material
+  feature:
+    tabs: true
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: white
+      accent: deep orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: deep orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/varigg/pdf-converter
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/pdf-converter
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
