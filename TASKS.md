@@ -43,20 +43,16 @@ Both of these are named, specific blockers in
 dependencies" and "Known errata" sections for the consumer-side context
 before starting.
 
-- [ ] **Page markers.** `extract_text_from_pdf` currently returns plain
-      text/markdown with no page-boundary information. adventure-library's
-      design (`docs/design.md`) wants page numbers in component provenance
-      "when available" — right now it's never available. Emit page
-      markers (e.g. inline sentinel comments, or a parallel offset→page
-      map) that a downstream caller can use to attribute a character span
-      to a page.
-- [ ] **Coverage / garble quality metrics.** adventure-library has one
-      corpus document (out of 85) where extraction produced a heavily
-      garbled body under clean-looking headings — heading-based quality
-      heuristics on the consumer side can't detect this class of failure.
-      Add a quality signal here (e.g. a garble-consonant-ratio check, or a
-      dictionary-coverage score) that downstream code can use to flag
-      likely-bad extractions before they're segmented and sent to an LLM.
+- [x] **Page markers.** `extract_pdf_with_metadata` preserves the plain-string
+      return contract of `extract_text_from_pdf` while exposing `pypdf`
+      character offsets for every PDF page, including empty pages. Consumers
+      can use `page_number - 1` to look up a one-based PDF page in
+      `page_offsets` when attributing a character span.
+- [x] **Coverage / garble quality metrics.**
+      `extract_pdf_with_metadata` also returns `ExtractionQuality`, including
+      text length, alphabetic-character ratio, suspicious-token count, and a
+      consonant-run garble score. `is_likely_garbled` is a conservative review
+      signal; consumers retain control over OCR and rejection policy.
 - [ ] **Once either lands**, adventure-library has its own follow-up: a
       "stale-span guard" must ship *before* any corpus is re-extracted with
       the new extractor, because re-extraction rewrites markdown in place
@@ -68,18 +64,17 @@ before starting.
 
 ## 3. Housekeeping noticed during the move
 
-- [ ] `README.md` is a 3-line stub — expand it to actually describe the
-      tool (it currently only exists to satisfy hatchling's `readme =
-      "README.md"` requirement in `pyproject.toml`).
+- [x] Expand `README.md` with installation, CLI, library API, and development
+      guidance.
 - [x] `requires-python` now targets `>=3.10,<4.0`; adventure-library itself
       requires `>=3.12`.
-- [ ] `.github/workflows/` (`main.yml`, `on-release-main.yml`,
-      `validate-codecov-config.yml`) and `codecov.yaml` exist but have never
-      run (no remote, no CI history). Verify they're not stale
-      copier/cookiecutter template output before relying on them.
-- [ ] `.pre-commit-config.yaml` exists — confirm hooks still match the
-      current toolchain (ruff version, mypy config) before assuming it's
-      wired up correctly.
+- [x] Verify CI configuration. `Main` and `validate-codecov-config` now run
+      successfully on pushes to `main`; the obsolete GitHub Pages release
+      workflow was removed because documentation stays in the repository. The
+      Codecov config validates successfully.
+- [x] Verify `.pre-commit-config.yaml` against the current toolchain. Its
+      Ruff hooks run successfully alongside `ty`; `make check` is the
+      project-level verification command.
 - [ ] A stray extracted personal document (a tax return, ~711KB markdown
       file) was found sitting uncommitted at the checkout root during the
       move to `~/code`. It was relocated to `~/private-scratch/` and never
