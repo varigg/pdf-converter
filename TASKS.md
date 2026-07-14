@@ -7,11 +7,11 @@ and given its first `git init` (root commit `68c2ed5`, branch `main`). It had
 no prior history — treat anything here as day-one state, not as a
 regression from some earlier "working" version.
 
-It's an editable path dependency of `~/code/adventure-library`'s optional
-`pdf-extraction` extra (`[tool.uv.sources]` in that repo's `pyproject.toml`
-points here). Changes to the public API of `pdf_converter.extractor`
-(currently just `extract_text_from_pdf`) are consumed by
-`adventure-library/src/adventure_library/extraction.py`.
+It is a tag-pinned Git dependency of `adventure-library`'s optional
+`pdf-extraction` extra. Changes to the public API of
+`pdf_converter.extractor` (`extract_text_from_pdf` and the additive
+`extract_pdf_with_metadata`) should preserve the documented plain-text and
+metadata contracts.
 
 ## 1. Decide on publishing, then act on it
 

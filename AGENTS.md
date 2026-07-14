@@ -94,5 +94,6 @@ real documents.
 
 Update `README.md` and `docs/` when a user-visible CLI option, extractor,
 provider, output format, or public API changes. The repository and GitHub
-Pages URLs in metadata are aspirational until publishing work in `TASKS.md`
-is completed; do not assume remote CI or releases exist.
+release tag are live; documentation remains in the repository rather than
+being deployed to GitHub Pages. Verify CI for every pushed change and create a
+new tag only for an intentional release.

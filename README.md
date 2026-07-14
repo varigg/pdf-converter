@@ -69,6 +69,9 @@ For ingestion pipelines that need provenance and quality signals, use
 maps each one-based PDF page number to the character offset where that page
 starts. Its `quality` includes a garble score and related metrics; callers can
 use `quality.is_likely_garbled` to route suspect documents for review or OCR.
+MuPDF extraction remains useful for Markdown-oriented output, but currently
+returns an empty page map because that backend does not preserve page
+boundaries through this API.
 
 ## Development
 
