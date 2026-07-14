@@ -29,12 +29,10 @@ being deployed as a GitHub Pages site:
 - [x] Push `main`.
 - [x] Keep MkDocs source documentation in the repository; do not deploy a
       GitHub Pages site or declare a Pages homepage URL.
-- [ ] Once pushed, `adventure-library`'s `[tool.uv.sources]` editable path
-      pin can eventually move to a git or PyPI source instead of an
-      absolute local path — closes out that project's last portability gap
-      for this dependency. Don't do this until pdf-converter has at least
-      one tagged version; update `adventure-library/docs/6-memo/handoff.md`
-      hard dependency #3 when it happens.
+- [x] Tag `v0.0.1` and move `adventure-library`'s optional
+      `pdf-extraction` dependency from its absolute editable path to the
+      public Git source. Its lockfile pins tag `v0.0.1` to commit
+      `f27b5fe`, and its handoff now records the resolved portability gap.
 
 ## 2. Upstream feature work adventure-library is waiting on
 
