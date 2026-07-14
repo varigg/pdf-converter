@@ -1,6 +1,5 @@
 site_name: pdf-converter
 repo_url: https://github.com/varigg/pdf-converter
-site_url: https://varigg.github.io/pdf-converter
 site_description: A command line utility to summarize PDF files.
 site_author: Steffen Vulpius
 edit_uri: edit/main/docs/

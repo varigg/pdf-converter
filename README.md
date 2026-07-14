@@ -81,8 +81,8 @@ uv run ruff check .
 uv run mkdocs build -s
 ```
 
-Project documentation is configured for GitHub Pages at
-<https://varigg.github.io/pdf-converter/>.
+Additional project documentation is maintained in the repository's
+[`docs/`](docs/) directory.
 
 ## License
 

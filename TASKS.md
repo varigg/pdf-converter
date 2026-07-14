@@ -15,26 +15,20 @@ points here). Changes to the public API of `pdf_converter.extractor`
 
 ## 1. Decide on publishing, then act on it
 
-`pyproject.toml` already declares:
+`pyproject.toml` declares the repository URL:
 
 ```
 [project.urls]
-Homepage = "https://varigg.github.io/pdf-converter/"
 Repository = "https://github.com/varigg/pdf-converter"
 ```
 
-Neither exists yet. Either the metadata is aspirational and should be
-removed/commented until true, or the intent is to publish — in which case:
+The repository is published. Documentation is maintained in-repo rather than
+being deployed as a GitHub Pages site:
 
-- [ ] Create the `varigg/pdf-converter` GitHub repo (see adventure-library's
-      recent onboarding for the pattern: `gh repo create`, then
-      `git remote set-url origin https://github.com/...` + `gh auth
-      setup-git` rather than plain SSH — this box's `~/.ssh/config` aliases
-      GitHub as `github.com-personal`, so a bare `git@github.com:` remote
-      fails).
-- [ ] Push `main`.
-- [ ] Decide whether to actually stand up the `mkdocs.yml`-based docs site at
-      the declared GitHub Pages URL, or drop the `Homepage` URL for now.
+- [x] Create the `varigg/pdf-converter` GitHub repo.
+- [x] Push `main`.
+- [x] Keep MkDocs source documentation in the repository; do not deploy a
+      GitHub Pages site or declare a Pages homepage URL.
 - [ ] Once pushed, `adventure-library`'s `[tool.uv.sources]` editable path
       pin can eventually move to a git or PyPI source instead of an
       absolute local path — closes out that project's last portability gap

@@ -25,9 +25,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://varigg.github.io/pdf-converter/"
 Repository = "https://github.com/varigg/pdf-converter"
-Documentation = "https://varigg.github.io/pdf-converter/"
+Documentation = "https://github.com/varigg/pdf-converter/tree/main/docs"
 
 [project.scripts]
 pdf-converter = "pdf_converter.converter:main"
