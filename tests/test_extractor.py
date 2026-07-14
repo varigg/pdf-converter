@@ -2,87 +2,67 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from pdf_converter.exceptions import ExtractionError, UnknownExtractorError
 from pdf_converter.extractor import (
+    SUPPORTED_EXTRACTORS,
     PDFExtractor,
     extract_text_from_pdf,
     get_extractor,
     mupdf_strategy,
     pypdf_strategy,
-    unstructured_strategy,
 )
 
 
 @patch("pypdf.PdfReader")
 def test_pypdf_strategy(mock_reader_class: MagicMock) -> None:
-    mock_reader = MagicMock()
-    mock_page = MagicMock()
-    mock_page.extract_text.return_value = "PyPDF text"
-    mock_reader.pages = [mock_page]
-    mock_reader_class.return_value = mock_reader
+    first_page = MagicMock()
+    first_page.extract_text.return_value = "First page"
+    blank_page = MagicMock()
+    blank_page.extract_text.return_value = None
+    mock_reader_class.return_value.pages = [first_page, blank_page]
 
     with patch("builtins.open", MagicMock()):
-        result = pypdf_strategy("dummy.pdf")
-        assert result == "PyPDF text"
+        assert pypdf_strategy("dummy.pdf") == "First page"
+
+
+def test_pypdf_strategy_wraps_backend_errors() -> None:
+    with (
+        patch("builtins.open", side_effect=OSError("unreadable")),
+        pytest.raises(ExtractionError, match="pypdf could not extract"),
+    ):
+        pypdf_strategy("dummy.pdf")
 
 
 @patch("pymupdf4llm.to_markdown")
 def test_mupdf_strategy(mock_to_markdown: MagicMock) -> None:
     mock_to_markdown.return_value = "MuPDF markdown"
-    result = mupdf_strategy("dummy.pdf")
-    assert result == "MuPDF markdown"
+
+    assert mupdf_strategy("dummy.pdf") == "MuPDF markdown"
     mock_to_markdown.assert_called_once_with("dummy.pdf")
 
 
-def test_unstructured_strategy() -> None:
-    # Use sys.modules patching to handle the local import in unstructured_strategy
-    mock_partition = MagicMock()
-    mock_pdf_module = MagicMock()
-    mock_pdf_module.partition_pdf = mock_partition
+def test_pdf_extractor_delegates_to_strategy() -> None:
+    strategy = MagicMock(return_value="Mock text")
 
-    with patch.dict("sys.modules", {"unstructured.partition.pdf": mock_pdf_module}):
-        mock_el = MagicMock()
-        mock_el.__str__.return_value = "Unstructured text"
-        mock_partition.return_value = [mock_el]
-
-        result = unstructured_strategy("dummy.pdf")
-        assert result == "Unstructured text"
-        mock_partition.assert_called_once_with(filename="dummy.pdf")
+    assert PDFExtractor(strategy).extract("dummy.pdf") == "Mock text"
+    strategy.assert_called_once_with("dummy.pdf")
 
 
-def test_pdf_extractor() -> None:
-    mock_strategy = MagicMock()
-    mock_strategy.return_value = "Mock text"
-    extractor = PDFExtractor(mock_strategy)
-    result = extractor.extract("dummy.pdf")
-    assert result == "Mock text"
-    mock_strategy.assert_called_once_with("dummy.pdf")
+def test_supported_extractors_match_factory() -> None:
+    assert SUPPORTED_EXTRACTORS == ("pypdf", "mupdf")
+    assert get_extractor("PYPDF").strategy is pypdf_strategy
+    assert get_extractor("mupdf").strategy is mupdf_strategy
 
 
-def test_get_extractor() -> None:
-    # Test that get_extractor returns a PDFExtractor with the correct strategy
-    extractor = get_extractor("pypdf")
-    assert isinstance(extractor, PDFExtractor)
-    assert extractor.strategy == pypdf_strategy
-
-    extractor = get_extractor("mupdf")
-    assert isinstance(extractor, PDFExtractor)
-    assert extractor.strategy == mupdf_strategy
-
-    extractor = get_extractor("unstructured")
-    assert isinstance(extractor, PDFExtractor)
-    assert extractor.strategy == unstructured_strategy
-
-    with pytest.raises(SystemExit):
+def test_get_extractor_rejects_unknown_backend() -> None:
+    with pytest.raises(UnknownExtractorError, match="Unknown extractor"):
         get_extractor("invalid")
 
 
 @patch("pdf_converter.extractor.get_extractor")
 def test_extract_text_from_pdf(mock_get_extractor: MagicMock) -> None:
-    mock_extractor = MagicMock()
-    mock_extractor.extract.return_value = "Extracted text"
-    mock_get_extractor.return_value = mock_extractor
+    mock_get_extractor.return_value.extract.return_value = "Extracted text"
 
-    result = extract_text_from_pdf("dummy.pdf", "mupdf")
-    assert result == "Extracted text"
+    assert extract_text_from_pdf("dummy.pdf", "mupdf") == "Extracted text"
     mock_get_extractor.assert_called_once_with("mupdf")
-    mock_extractor.extract.assert_called_once_with("dummy.pdf")
+    mock_get_extractor.return_value.extract.assert_called_once_with("dummy.pdf")

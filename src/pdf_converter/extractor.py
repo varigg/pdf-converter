@@ -1,31 +1,31 @@
-import sys
 from typing import Protocol, runtime_checkable
+
+from .exceptions import ExtractionError, UnknownExtractorError
 
 
 @runtime_checkable
 class ExtractionStrategy(Protocol):
     """Protocol for extraction strategies."""
 
-    def __call__(self, pdf_path: str) -> str:
-        ...
+    def __call__(self, pdf_path: str) -> str: ...
 
 
 def pypdf_strategy(pdf_path: str) -> str:
     """Extraction strategy using pypdf."""
     import pypdf
 
-    text = ""
     try:
         with open(pdf_path, "rb") as file:
             reader = pypdf.PdfReader(file)
+            pages = []
             for page in reader.pages:
                 page_text = page.extract_text()
                 if page_text:
-                    text += str(page_text)
-    except Exception as e:
-        print(f"Error using pypdf: {e}")
-        sys.exit(1)
-    return text
+                    pages.append(str(page_text))
+            return "".join(pages)
+    except Exception as error:
+        message = f"pypdf could not extract text from '{pdf_path}'"
+        raise ExtractionError(message) from error
 
 
 def mupdf_strategy(pdf_path: str) -> str:
@@ -34,9 +34,16 @@ def mupdf_strategy(pdf_path: str) -> str:
 
     try:
         return str(pymupdf4llm.to_markdown(pdf_path))
-    except Exception as e:
-        print(f"Error using pymupdf4llm: {e}")
-        sys.exit(1)
+    except Exception as error:
+        message = f"pymupdf4llm could not extract text from '{pdf_path}'"
+        raise ExtractionError(message) from error
+
+
+EXTRACTION_STRATEGIES: dict[str, ExtractionStrategy] = {
+    "pypdf": pypdf_strategy,
+    "mupdf": mupdf_strategy,
+}
+SUPPORTED_EXTRACTORS: tuple[str, ...] = tuple(EXTRACTION_STRATEGIES)
 
 
 class PDFExtractor:
@@ -52,16 +59,11 @@ class PDFExtractor:
 
 def get_extractor(extractor_type: str) -> PDFExtractor:
     """Factory method to get an extractor with the desired strategy."""
-    strategies: dict[str, ExtractionStrategy] = {
-        "pypdf": pypdf_strategy,
-        "mupdf": mupdf_strategy,
-    }
-
-    strategy = strategies.get(extractor_type.lower())
-    if not strategy:
-        available = ", ".join(strategies.keys())
-        print(f"Error: Unknown extractor type '{extractor_type}'. Available: {available}")
-        sys.exit(1)
+    strategy = EXTRACTION_STRATEGIES.get(extractor_type.lower())
+    if strategy is None:
+        available = ", ".join(SUPPORTED_EXTRACTORS)
+        message = f"Unknown extractor type '{extractor_type}'. Available: {available}"
+        raise UnknownExtractorError(message)
 
     return PDFExtractor(strategy)
 

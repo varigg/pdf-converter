@@ -1,134 +1,91 @@
-"""
-Usage tracker for LLM API calls.
-Tracks requests, tokens, and estimated cost by month and provider.
-"""
+"""Persistent monthly usage accounting for LLM requests."""
 
 import json
+import logging
 import os
+import tempfile
 from datetime import datetime
-from typing import Any
+from pathlib import Path
+from typing import Any, cast
 
-# Store usage stats in project root
-USAGE_FILE = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "usage_stats.json"
-)
+from platformdirs import user_state_path
+
+LOGGER = logging.getLogger(__name__)
+DEFAULT_USAGE_FILE = user_state_path("pdf-converter", "varigg") / "usage_stats.json"
+PathLike = str | os.PathLike[str]
 
 
 class UsageTracker:
-    """Tracks API usage statistics locally, separated by provider."""
+    """Track request counts, token usage, and estimated cost by provider."""
 
-    def __init__(self, provider: str = "unknown", filepath: str = USAGE_FILE):
-        """
-        Initialize the usage tracker.
-
-        Args:
-            provider: LLM provider name (e.g., "gemini", "perplexity", "openai", "anthropic")
-            filepath: Path to the JSON file storing usage stats.
-        """
+    def __init__(self, provider: str = "unknown", filepath: PathLike = DEFAULT_USAGE_FILE):
         self.provider = provider
-        self.filepath = filepath
+        self.filepath = Path(filepath)
         self.stats = self._load_stats()
 
-    def _load_stats(self) -> dict[str, dict[str, Any]]:
-        """Load stats from file or return empty dict."""
-        if os.path.exists(self.filepath):
-            try:
-                with open(self.filepath) as f:
-                    return json.load(f)
-            except (OSError, json.JSONDecodeError):
-                return {}
-        return {}
-
-    def _save_stats(self):
-        """Save stats to file."""
+    def _load_stats(self) -> dict[str, Any]:
+        if not self.filepath.is_file():
+            return {}
         try:
-            with open(self.filepath, "w") as f:
-                json.dump(self.stats, f, indent=2)
-        except OSError as e:
-            print(f"Warning: Could not save usage stats: {e}")
+            with self.filepath.open(encoding="utf-8") as file:
+                data = json.load(file)
+        except (OSError, json.JSONDecodeError):
+            LOGGER.warning("Could not read usage statistics from %s", self.filepath)
+            return {}
+        return cast(dict[str, Any], data) if isinstance(data, dict) else {}
 
-    def track_request(self, tokens: int = 0, cost: float = 0.0):
-        """
-        Track a single API request for the current provider.
+    def _save_stats(self) -> None:
+        temporary_path: Path | None = None
+        try:
+            self.filepath.parent.mkdir(parents=True, exist_ok=True)
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                dir=self.filepath.parent,
+                prefix=f".{self.filepath.name}.",
+                delete=False,
+            ) as temporary_file:
+                json.dump(self.stats, temporary_file, indent=2)
+                temporary_file.write("\n")
+                temporary_path = Path(temporary_file.name)
+            os.replace(temporary_path, self.filepath)
+        except OSError:
+            LOGGER.warning("Could not save usage statistics to %s", self.filepath)
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
 
-        Args:
-            tokens: Number of tokens used.
-            cost: Estimated cost in USD.
-        """
-        # Reload to ensure we don't overwrite other providers' updates
+    def track_request(self, tokens: int = 0, cost: float = 0.0) -> None:
+        """Record one request for this tracker's provider."""
         self.stats = self._load_stats()
-
         month = datetime.now().strftime("%Y-%m")
-
-        # Initialize month if needed
-        if month not in self.stats:
-            self.stats[month] = {}
-
-        # Initialize provider stats if needed
-        if self.provider not in self.stats[month]:
-            self.stats[month][self.provider] = {
-                "requests": 0,
-                "tokens": 0,
-                "cost": 0.0,
-            }
-
-        # Update stats for this provider
-        self.stats[month][self.provider]["requests"] += 1
-        self.stats[month][self.provider]["tokens"] += tokens
-        self.stats[month][self.provider]["cost"] += cost
-
+        month_stats = self.stats.setdefault(month, {})
+        provider_stats = month_stats.setdefault(
+            self.provider,
+            {"requests": 0, "tokens": 0, "cost": 0.0},
+        )
+        provider_stats["requests"] += 1
+        provider_stats["tokens"] += tokens
+        provider_stats["cost"] += cost
         self._save_stats()
 
     def get_stats(self, month: str | None = None, provider: str | None = None) -> dict[str, Any]:
-        """
-        Get usage statistics.
-
-        Args:
-            month: Specific month (YYYY-MM) to get stats for.
-                   If None, returns all months.
-            provider: Specific provider to get stats for.
-                     If None, uses tracker's provider.
-
-        Returns:
-            Dict containing usage stats.
-        """
-        # Reload to get latest data from other instances
+        """Return all statistics or one provider's statistics for a month."""
         self.stats = self._load_stats()
-
+        if month is None:
+            return self.stats
         target_provider = provider or self.provider
-
-        if month:
-            month_stats = self.stats.get(month, {})
-            return month_stats.get(target_provider, {"requests": 0, "tokens": 0, "cost": 0.0})
-        return self.stats
+        month_stats = self.stats.get(month, {})
+        return cast(
+            dict[str, Any],
+            month_stats.get(target_provider, {"requests": 0, "tokens": 0, "cost": 0.0}),
+        )
 
     def get_current_month_stats(self, provider: str | None = None) -> dict[str, Any]:
-        """
-        Get stats for the current month and provider.
-
-        Args:
-            provider: Specific provider to get stats for.
-                     If None, uses tracker's provider.
-
-        Returns:
-            Dict with usage stats for the provider.
-        """
-        month = datetime.now().strftime("%Y-%m")
-        return self.get_stats(month, provider)
+        """Return current-month statistics for one provider."""
+        return self.get_stats(datetime.now().strftime("%Y-%m"), provider)
 
     def get_all_providers_stats(self, month: str | None = None) -> dict[str, Any]:
-        """
-        Get stats for all providers.
-
-        Args:
-            month: Specific month (YYYY-MM) to get stats for.
-                   If None, uses current month.
-
-        Returns:
-            Dict mapping provider names to their stats.
-        """
-        # Reload to ensure we have latest data
+        """Return all provider statistics for a month."""
         self.stats = self._load_stats()
-
         target_month = month or datetime.now().strftime("%Y-%m")
-        return self.stats.get(target_month, {})
+        return cast(dict[str, Any], self.stats.get(target_month, {}))

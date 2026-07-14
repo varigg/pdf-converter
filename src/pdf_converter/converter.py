@@ -1,17 +1,17 @@
 import argparse
 import os
 import shutil
-import sys
-from typing import Optional
 
-from pdf_converter.extractor import PDFExtractor, get_extractor
+from pdf_converter.exceptions import OutputWriteError, PDFConverterError, PDFMoveError
+from pdf_converter.extractor import SUPPORTED_EXTRACTORS, PDFExtractor, get_extractor
+from pdf_converter.services import SUPPORTED_PROVIDERS
 from pdf_converter.summarizer import summarize_text_with_llm
 
 
 def write_output_to_md(
     content: str,
     original_file_name: str,
-    storage_dir: Optional[str],
+    stored_pdf_path: str | None,
     mode: str,
     output_dir: str = ".",
 ) -> str:
@@ -29,43 +29,42 @@ def write_output_to_md(
     try:
         with open(md_path, "w", encoding="utf-8") as f:
             f.write(f"# {title} {original_file_name}\n\n")
-            if storage_dir:
-                f.write(f"**Original PDF moved to:** `{os.path.abspath(storage_dir)}`\n\n")
+            if stored_pdf_path:
+                f.write(f"**Original PDF moved to:** `{os.path.abspath(stored_pdf_path)}`\n\n")
             else:
                 f.write("**Original PDF remained in its original location.**\n\n")
             f.write(content)
         print(f"{mode.capitalize()} file created successfully.")
-    except OSError as e:
-        print(f"Error writing to Markdown file: {e}")
-        sys.exit(1)
+    except OSError as error:
+        message = f"Could not write Markdown output to '{md_path}'"
+        raise OutputWriteError(message) from error
     else:
         return md_path
 
 
-def move_pdf_file(pdf_path: str, storage_dir: str) -> None:
+def move_pdf_file(pdf_path: str, storage_dir: str) -> str:
     """
     Moves the original PDF file to a specified storage location.
     """
     if not os.path.exists(storage_dir):
         print(f"Storage directory '{storage_dir}' does not exist. Creating it...")
-        os.makedirs(storage_dir)
-
     file_name = os.path.basename(pdf_path)
     destination_path = os.path.join(storage_dir, file_name)
-
-    print(f"Moving '{file_name}' to '{storage_dir}'...")
     try:
-        shutil.move(pdf_path, destination_path)
+        os.makedirs(storage_dir, exist_ok=True)
+        print(f"Moving '{file_name}' to '{storage_dir}'...")
+        moved_path = shutil.move(pdf_path, destination_path)
+    except (OSError, shutil.Error) as error:
+        message = f"Could not move '{pdf_path}' to '{destination_path}'"
+        raise PDFMoveError(message) from error
+    else:
         print("File moved successfully.")
-    except shutil.Error as e:
-        print(f"Error moving file: {e}")
-    except OSError as e:
-        print(f"Error moving file: {e}")
+        return moved_path
 
 
 def run_conversion(
     pdf_file_path: str,
-    storage_directory: Optional[str],
+    storage_directory: str | None,
     extractor: PDFExtractor,
     mode: str = "summarize",
     provider: str = "gemini",
@@ -87,17 +86,16 @@ def run_conversion(
         # Step 2: Use raw text
         output_content = extracted_text
 
-    # Step 3: Write the result to a Markdown file
-    write_output_to_md(output_content, original_file_name, storage_directory, mode)
-
-    # Step 4: Move the original PDF to the storage location (if provided)
+    stored_pdf_path = None
     if storage_directory:
-        move_pdf_file(pdf_file_path, storage_directory)
+        stored_pdf_path = move_pdf_file(pdf_file_path, storage_directory)
     else:
         print(f"Original file '{original_file_name}' was not moved.")
 
+    write_output_to_md(output_content, original_file_name, stored_pdf_path, mode)
 
-def main(argv: Optional[list[str]] = None) -> None:
+
+def main(argv: list[str] | None = None) -> None:
     """
     Entry point for the console script.
     """
@@ -119,23 +117,19 @@ def main(argv: Optional[list[str]] = None) -> None:
     parser.add_argument(
         "--extractor",
         "-e",
-        choices=["pypdf", "mupdf", "unstructured"],
+        choices=SUPPORTED_EXTRACTORS,
         default="pypdf",
         help="PDF extraction library (default: pypdf)",
     )
     parser.add_argument(
         "--provider",
         "-p",
-        choices=["gemini", "perplexity", "openai", "anthropic"],
+        choices=SUPPORTED_PROVIDERS,
         default=None,
         help="LLM provider for summarization (default: reads from LLM_PROVIDER env var or 'gemini')",
     )
 
-    # If argv is passed (e.g. from a test), it might include the script name as argv[0].
-    # But argparse.parse_args() by default uses sys.argv[1:].
-    # If we pass argv to parse_args(), it should be the list of arguments *excluding* the script name
-    # OR if main is called with sys.argv, it has the script name.
-    args = parser.parse_args(argv[1:] if argv else []) if argv is not None else parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Dependency Injection: Instantiate the extractor here
     extractor = get_extractor(args.extractor)
@@ -143,8 +137,10 @@ def main(argv: Optional[list[str]] = None) -> None:
     # Determine LLM provider (CLI arg takes precedence over env var)
     provider = args.provider if args.provider else os.environ.get("LLM_PROVIDER", "gemini")
 
-    # Run the conversion
-    run_conversion(args.pdf_path, args.storage_dir, extractor, args.mode, provider)
+    try:
+        run_conversion(args.pdf_path, args.storage_dir, extractor, args.mode, provider)
+    except PDFConverterError as error:
+        parser.exit(1, f"Error: {error}\n")
 
 
 if __name__ == "__main__":

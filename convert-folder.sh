@@ -10,7 +10,7 @@ Output .md files are written to the current working directory.
 
 Options:
   -m, --mode <mode>          summarize|extract  (default: summarize)
-  -e, --extractor <lib>      pypdf|mupdf|unstructured  (default: pypdf)
+  -e, --extractor <lib>      pypdf|mupdf  (default: pypdf)
   -p, --provider <llm>       gemini|perplexity|openai|anthropic
   -r, --recursive            also search sub-directories
   -h, --help                 show this help

@@ -77,8 +77,8 @@ before starting.
 - [ ] `README.md` is a 3-line stub — expand it to actually describe the
       tool (it currently only exists to satisfy hatchling's `readme =
       "README.md"` requirement in `pyproject.toml`).
-- [ ] `requires-python = ">=3.9,<4.0"` — confirm this floor is still
-      intentional; adventure-library itself requires `>=3.12`.
+- [x] `requires-python` now targets `>=3.10,<4.0`; adventure-library itself
+      requires `>=3.12`.
 - [ ] `.github/workflows/` (`main.yml`, `on-release-main.yml`,
       `validate-codecov-config.yml`) and `codecov.yaml` exist but have never
       run (no remote, no CI history). Verify they're not stale
