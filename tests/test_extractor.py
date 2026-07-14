@@ -5,7 +5,10 @@ import pytest
 from pdf_converter.exceptions import ExtractionError, UnknownExtractorError
 from pdf_converter.extractor import (
     SUPPORTED_EXTRACTORS,
+    ExtractionResult,
     PDFExtractor,
+    calculate_extraction_quality,
+    extract_pdf_with_metadata,
     extract_text_from_pdf,
     get_extractor,
     mupdf_strategy,
@@ -23,6 +26,43 @@ def test_pypdf_strategy(mock_reader_class: MagicMock) -> None:
 
     with patch("builtins.open", MagicMock()):
         assert pypdf_strategy("dummy.pdf") == "First page"
+
+
+@patch("pypdf.PdfReader")
+def test_extract_pdf_with_metadata_preserves_pypdf_page_offsets(mock_reader_class: MagicMock) -> None:
+    first_page = MagicMock()
+    first_page.extract_text.return_value = "First page"
+    blank_page = MagicMock()
+    blank_page.extract_text.return_value = None
+    third_page = MagicMock()
+    third_page.extract_text.return_value = "Third"
+    mock_reader_class.return_value.pages = [first_page, blank_page, third_page]
+
+    with patch("builtins.open", MagicMock()):
+        result = extract_pdf_with_metadata("dummy.pdf")
+
+    assert result.text == "First pageThird"
+    assert result.page_offsets == (0, 10, 10)
+    assert result.quality.page_count == 3
+    assert result.quality.character_count == 15
+
+
+def test_calculate_extraction_quality_flags_consonant_garble() -> None:
+    quality = calculate_extraction_quality("A readable heading pqqqqrs follows.", page_count=1)
+
+    assert quality.alphabetic_character_ratio > 0.9
+    assert quality.suspicious_word_count == 1
+    assert quality.garble_score == 0.2
+    assert quality.is_likely_garbled
+
+
+def test_calculate_extraction_quality_handles_empty_text() -> None:
+    quality = calculate_extraction_quality("")
+
+    assert quality.character_count == 0
+    assert quality.alphabetic_character_ratio == 0.0
+    assert quality.garble_score == 0.0
+    assert not quality.is_likely_garbled
 
 
 def test_pypdf_strategy_wraps_backend_errors() -> None:
@@ -66,3 +106,14 @@ def test_extract_text_from_pdf(mock_get_extractor: MagicMock) -> None:
     assert extract_text_from_pdf("dummy.pdf", "mupdf") == "Extracted text"
     mock_get_extractor.assert_called_once_with("mupdf")
     mock_get_extractor.return_value.extract.assert_called_once_with("dummy.pdf")
+
+
+@patch("pdf_converter.extractor.EXTRACTION_RESULT_STRATEGIES")
+def test_extract_pdf_with_metadata_uses_selected_backend(mock_strategies: MagicMock) -> None:
+    expected = MagicMock(spec=ExtractionResult)
+    strategy = MagicMock(return_value=expected)
+    mock_strategies.get.return_value = strategy
+
+    assert extract_pdf_with_metadata("dummy.pdf", "MUPDF") is expected
+    mock_strategies.get.assert_called_once_with("mupdf")
+    strategy.assert_called_once_with("dummy.pdf")

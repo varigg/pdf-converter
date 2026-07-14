@@ -64,6 +64,12 @@ text = extract_text_from_pdf("report.pdf", extractor_type="pypdf")
 The function raises `pdf_converter.exceptions.ExtractionError` when the chosen
 backend cannot read the PDF.
 
+For ingestion pipelines that need provenance and quality signals, use
+`extract_pdf_with_metadata`. With the `pypdf` backend, its `page_offsets`
+maps each one-based PDF page number to the character offset where that page
+starts. Its `quality` includes a garble score and related metrics; callers can
+use `quality.is_likely_garbled` to route suspect documents for review or OCR.
+
 ## Development
 
 Run the local checks with:
