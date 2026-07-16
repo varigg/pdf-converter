@@ -24,6 +24,13 @@ dependencies = [
     "platformdirs>=4.3.8",
 ]
 
+[project.optional-dependencies]
+docling = [
+    # rapidocr is required to reproduce the measured OCR behaviour on pure
+    # scans; plain docling ships without an OCR engine.
+    "docling[rapidocr]>=2.113.0,<3.0.0",
+]
+
 [project.urls]
 Repository = "https://github.com/varigg/pdf-converter"
 Documentation = "https://github.com/varigg/pdf-converter/tree/main/docs"

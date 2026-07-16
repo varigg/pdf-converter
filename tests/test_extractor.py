@@ -1,3 +1,5 @@
+import sys
+from types import ModuleType
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -8,12 +10,22 @@ from pdf_converter.extractor import (
     ExtractionResult,
     PDFExtractor,
     calculate_extraction_quality,
+    docling_strategy,
     extract_pdf_with_metadata,
     extract_text_from_pdf,
     get_extractor,
     mupdf_strategy,
     pypdf_strategy,
 )
+
+
+def _fake_docling_modules(converter_class: MagicMock) -> dict[str, ModuleType]:
+    """Build importable stand-ins for the optional docling dependency."""
+    converter_module = ModuleType("docling.document_converter")
+    converter_module.DocumentConverter = converter_class  # type: ignore[attr-defined]
+    docling_module = ModuleType("docling")
+    docling_module.document_converter = converter_module  # type: ignore[attr-defined]
+    return {"docling": docling_module, "docling.document_converter": converter_module}
 
 
 @patch("pypdf.PdfReader")
@@ -81,6 +93,57 @@ def test_mupdf_strategy(mock_to_markdown: MagicMock) -> None:
     mock_to_markdown.assert_called_once_with("dummy.pdf")
 
 
+def test_docling_extraction_emits_page_markers_and_offsets() -> None:
+    document = MagicMock()
+    document.pages = {1: MagicMock(), 2: MagicMock(), 3: MagicMock()}
+    page_markdown = {1: "# Title\n\nFirst page body", 2: "", 3: "Closing text"}
+    document.export_to_markdown.side_effect = lambda page_no: page_markdown[page_no]
+    converter_class = MagicMock()
+    converter_class.return_value.convert.return_value.document = document
+
+    with patch.dict(sys.modules, _fake_docling_modules(converter_class)):
+        result = extract_pdf_with_metadata("dummy.pdf", "docling")
+
+    assert result.text == (
+        "<!-- page 1 -->\n# Title\n\nFirst page body\n\n<!-- page 2 -->\n<!-- page 3 -->\nClosing text\n\n"
+    )
+    assert len(result.page_offsets) == 3
+    for page_number, offset in enumerate(result.page_offsets, start=1):
+        assert result.text[offset:].startswith(f"<!-- page {page_number} -->")
+    assert result.quality.page_count == 3
+    converter_class.return_value.convert.assert_called_once_with("dummy.pdf")
+
+
+def test_docling_strategy_returns_marked_markdown() -> None:
+    document = MagicMock()
+    document.pages = {1: MagicMock()}
+    document.export_to_markdown.return_value = "Only page"
+    converter_class = MagicMock()
+    converter_class.return_value.convert.return_value.document = document
+
+    with patch.dict(sys.modules, _fake_docling_modules(converter_class)):
+        assert docling_strategy("dummy.pdf") == "<!-- page 1 -->\nOnly page\n\n"
+
+
+def test_docling_strategy_reports_missing_optional_dependency() -> None:
+    with (
+        patch.dict(sys.modules, {"docling": None, "docling.document_converter": None}),
+        pytest.raises(ExtractionError, match=r"pdf-converter\[docling\]"),
+    ):
+        docling_strategy("dummy.pdf")
+
+
+def test_docling_strategy_wraps_backend_errors() -> None:
+    converter_class = MagicMock()
+    converter_class.return_value.convert.side_effect = RuntimeError("conversion failed")
+
+    with (
+        patch.dict(sys.modules, _fake_docling_modules(converter_class)),
+        pytest.raises(ExtractionError, match="docling could not extract"),
+    ):
+        docling_strategy("dummy.pdf")
+
+
 def test_pdf_extractor_delegates_to_strategy() -> None:
     strategy = MagicMock(return_value="Mock text")
 
@@ -89,9 +152,10 @@ def test_pdf_extractor_delegates_to_strategy() -> None:
 
 
 def test_supported_extractors_match_factory() -> None:
-    assert SUPPORTED_EXTRACTORS == ("pypdf", "mupdf")
+    assert SUPPORTED_EXTRACTORS == ("pypdf", "mupdf", "docling")
     assert get_extractor("PYPDF").strategy is pypdf_strategy
     assert get_extractor("mupdf").strategy is mupdf_strategy
+    assert get_extractor("DOCLING").strategy is docling_strategy
 
 
 def test_get_extractor_rejects_unknown_backend() -> None:

@@ -121,13 +121,62 @@ def mupdf_extraction_result(pdf_path: str) -> ExtractionResult:
     return ExtractionResult(text=text, page_offsets=(), quality=calculate_extraction_quality(text))
 
 
+def docling_extraction_result(pdf_path: str) -> ExtractionResult:
+    """Extract structured Markdown with per-page markers using docling.
+
+    Each source page contributes a ``<!-- page N -->`` comment marker followed
+    by that page's Markdown export, so downstream consumers can attribute any
+    span of the output to a one-based PDF page. Empty pages keep their marker,
+    preserving the ``page_offsets`` boundary contract. Scanned pages without a
+    text layer are recovered through docling's built-in OCR.
+    """
+    try:
+        from docling.document_converter import DocumentConverter  # ty: ignore[unresolved-import]
+    except ImportError as error:
+        message = (
+            "The 'docling' extractor requires optional dependencies. "
+            "Install them with: pip install 'pdf-converter[docling]'"
+        )
+        raise ExtractionError(message) from error
+
+    try:
+        document = DocumentConverter().convert(pdf_path).document
+        segments: list[str] = []
+        page_offsets: list[int] = []
+        character_offset = 0
+        for page_number in sorted(document.pages):
+            page_offsets.append(character_offset)
+            page_markdown = document.export_to_markdown(page_no=page_number)
+            segment = f"<!-- page {page_number} -->\n"
+            if page_markdown:
+                segment += f"{page_markdown}\n\n"
+            segments.append(segment)
+            character_offset += len(segment)
+        text = "".join(segments)
+        return ExtractionResult(
+            text=text,
+            page_offsets=tuple(page_offsets),
+            quality=calculate_extraction_quality(text, page_count=len(page_offsets)),
+        )
+    except Exception as error:
+        message = f"docling could not extract text from '{pdf_path}'"
+        raise ExtractionError(message) from error
+
+
+def docling_strategy(pdf_path: str) -> str:
+    """Extraction strategy using docling."""
+    return docling_extraction_result(pdf_path).text
+
+
 EXTRACTION_STRATEGIES: dict[str, ExtractionStrategy] = {
     "pypdf": pypdf_strategy,
     "mupdf": mupdf_strategy,
+    "docling": docling_strategy,
 }
 EXTRACTION_RESULT_STRATEGIES = {
     "pypdf": pypdf_extraction_result,
     "mupdf": mupdf_extraction_result,
+    "docling": docling_extraction_result,
 }
 SUPPORTED_EXTRACTORS: tuple[str, ...] = tuple(EXTRACTION_STRATEGIES)
 
