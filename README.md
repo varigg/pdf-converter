@@ -7,7 +7,10 @@ and as a small Python library.
 ## Requirements
 
 - Python 3.10 or newer
-- An API key for the selected LLM provider when using summary mode
+- An API key for the selected LLM provider when using summary mode. Extraction
+  mode does not make network requests, except that the `docling` backend
+  downloads its layout models from Hugging Face on first use; afterwards it
+  also runs fully offline.
 
 ## Installation
 
@@ -17,6 +20,13 @@ install the project dependencies:
 
 ```sh
 uv sync
+```
+
+Install the optional Docling backend, including its OCR engine, when you need
+structured Markdown or extraction from scans:
+
+```sh
+pip install 'pdf-converter[docling]'
 ```
 
 ## Command-line usage
@@ -51,6 +61,12 @@ Output is written beside the command's working directory as either
 - `--provider` / `-p`: LLM provider for summary mode. If omitted, the value of
   `LLM_PROVIDER` is used, falling back to `gemini`.
 
+Summary mode supports `gemini`, `perplexity`, `openai`, and `anthropic`. Set
+the corresponding environment variable before use: `GOOGLE_API_KEY`,
+`PERPLEXITY_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY`. Each summary is
+sent as one prompt, so use extraction mode or split unusually large documents
+before summarizing them.
+
 ## Python API
 
 Use `extract_text_from_pdf` for a compact library interface:
@@ -73,26 +89,21 @@ MuPDF extraction remains useful for Markdown-oriented output, but currently
 returns an empty page map because that backend does not preserve page
 boundaries through this API.
 
-The `docling` backend produces structured Markdown — heading hierarchy,
+The optional `docling` backend produces structured Markdown — heading hierarchy,
 reconstructed tables, correct multi-column reading order — with a
 `<!-- page N -->` comment marker at the start of every page, and recovers
 scanned pages through built-in OCR. Its `page_offsets` point at each page's
-marker. Because it pulls in a large model stack, it is packaged as an
-optional extra:
-
-```sh
-pip install 'pdf-converter[docling]'
-```
+marker, including empty pages. It is substantially heavier than the default
+backends because it includes local models.
 
 ## Development
 
 Run the local checks with:
 
 ```sh
-uv run pytest
-uv run ty check
-uv run ruff check .
-uv run mkdocs build -s
+make test
+make check
+make docs-test
 ```
 
 Additional project documentation is maintained in the repository's

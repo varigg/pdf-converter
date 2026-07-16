@@ -1,6 +1,6 @@
 site_name: pdf-converter
 repo_url: https://github.com/varigg/pdf-converter
-site_description: A command line utility to summarize PDF files.
+site_description: Extract PDFs to Markdown-compatible text and optionally summarize them.
 site_author: Steffen Vulpius
 edit_uri: edit/main/docs/
 repo_name: varigg/pdf-converter
