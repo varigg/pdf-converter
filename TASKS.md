@@ -13,6 +13,22 @@ It is a tag-pinned Git dependency of `adventure-library`'s optional
 `extract_pdf_with_metadata`) should preserve the documented plain-text and
 metadata contracts.
 
+## 0. NEW (2026-07-16): Docling backend — read the rationale first
+
+`adventure-library` measured this package's strategies head-to-head and its
+design now calls for a `docling` extraction strategy (structured markdown,
+`<!-- page N -->` markers, built-in OCR) behind an optional `[docling]` extra,
+tagged `v0.1.0`. **Read `docs/docling-backend-rationale.md` before any
+analysis or refactoring** — it records what was measured about the existing
+strategies (including that `pymupdf4llm` dropped 92% of a clean document and
+that `summarizer.py` has no consumer), which contracts must hold, and where
+refactoring latitude exists.
+
+- [ ] Read `docs/docling-backend-rationale.md`
+- [ ] Add `docling` strategy with page-marker markdown export
+- [ ] `[docling]` optional extra; base install stays light
+- [ ] Tag `v0.1.0`; verify against one clean PDF and one pure scan
+
 ## 1. Decide on publishing, then act on it
 
 `pyproject.toml` declares the repository URL:
