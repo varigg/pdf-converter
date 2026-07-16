@@ -97,7 +97,7 @@ def test_docling_extraction_emits_page_markers_and_offsets() -> None:
     document = MagicMock()
     document.pages = {1: MagicMock(), 2: MagicMock(), 3: MagicMock()}
     page_markdown = {1: "# Title\n\nFirst page body", 2: "", 3: "Closing text"}
-    document.export_to_markdown.side_effect = lambda page_no: page_markdown[page_no]
+    document.export_to_markdown.side_effect = lambda *, page_no, traverse_pictures: page_markdown[page_no]
     converter_class = MagicMock()
     converter_class.return_value.convert.return_value.document = document
 
@@ -112,6 +112,10 @@ def test_docling_extraction_emits_page_markers_and_offsets() -> None:
         assert result.text[offset:].startswith(f"<!-- page {page_number} -->")
     assert result.quality.page_count == 3
     converter_class.return_value.convert.assert_called_once_with("dummy.pdf")
+    for call in document.export_to_markdown.call_args_list:
+        # OCR text nested under picture items (map labels, handouts) is only
+        # serialized when picture traversal is enabled.
+        assert call.kwargs["traverse_pictures"] is True
 
 
 def test_docling_strategy_returns_marked_markdown() -> None:

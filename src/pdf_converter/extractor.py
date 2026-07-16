@@ -128,7 +128,8 @@ def docling_extraction_result(pdf_path: str) -> ExtractionResult:
     by that page's Markdown export, so downstream consumers can attribute any
     span of the output to a one-based PDF page. Empty pages keep their marker,
     preserving the ``page_offsets`` boundary contract. Scanned pages without a
-    text layer are recovered through docling's built-in OCR.
+    text layer are recovered through docling's built-in OCR, including text
+    nested inside picture-classified regions such as maps and handouts.
     """
     try:
         from docling.document_converter import DocumentConverter  # ty: ignore[unresolved-import]
@@ -146,7 +147,7 @@ def docling_extraction_result(pdf_path: str) -> ExtractionResult:
         character_offset = 0
         for page_number in sorted(document.pages):
             page_offsets.append(character_offset)
-            page_markdown = document.export_to_markdown(page_no=page_number)
+            page_markdown = document.export_to_markdown(page_no=page_number, traverse_pictures=True)
             segment = f"<!-- page {page_number} -->\n"
             if page_markdown:
                 segment += f"{page_markdown}\n\n"

@@ -36,7 +36,12 @@ refactoring latitude exists.
       measurements: Bad Light (29,117 chars vs the RFC's 28,987 — the delta
       is the 8 page markers — 19 headings, 49s) and The Twilight Tomb pure
       scan (147,578 chars vs ~147k, all seven named entities OCR-recovered,
-      178s). Markers and offsets held on all four documents.
+      178s). Markers and offsets held on all four documents. Review follow-up:
+      per-page export now passes `traverse_pictures=True`, which adds ~1k
+      chars of text nested under picture items on the Twilight Tomb scan
+      (139 items, map labels and similar); full-page OCR text was confirmed
+      NOT to live under picture items (delta 0 on a pure full-page scan), so
+      the flag is an enrichment, not an OCR prerequisite.
 
 ## 1. Decide on publishing, then act on it
 
