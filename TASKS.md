@@ -24,10 +24,19 @@ strategies (including that `pymupdf4llm` dropped 92% of a clean document and
 that `summarizer.py` has no consumer), which contracts must hold, and where
 refactoring latitude exists.
 
-- [ ] Read `docs/docling-backend-rationale.md`
-- [ ] Add `docling` strategy with page-marker markdown export
-- [ ] `[docling]` optional extra; base install stays light
-- [ ] Tag `v0.1.0`; verify against one clean PDF and one pure scan
+- [x] Read `docs/docling-backend-rationale.md`
+- [x] Add `docling` strategy with page-marker markdown export
+- [x] `[docling]` optional extra; base install stays light. The extra pins
+      `docling[rapidocr]` — RapidOCR is itself an optional extra of docling,
+      and plain `docling` would not reproduce the OCR behaviour measured in
+      the rationale.
+- [ ] Tag `v0.1.0`; verified 2026-07-16 against synthetic fixtures (clean
+      3-pager with an empty middle page; rasterized zero-text scan of the
+      same content) **and** the two real corpus PDFs from the rationale's
+      measurements: Bad Light (29,117 chars vs the RFC's 28,987 — the delta
+      is the 8 page markers — 19 headings, 49s) and The Twilight Tomb pure
+      scan (147,578 chars vs ~147k, all seven named entities OCR-recovered,
+      178s). Markers and offsets held on all four documents.
 
 ## 1. Decide on publishing, then act on it
 

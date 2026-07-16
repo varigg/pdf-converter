@@ -47,7 +47,7 @@ Output is written beside the command's working directory as either
 ### Options
 
 - `--mode` / `-m`: `summarize` (the default) or `extract`.
-- `--extractor` / `-e`: `pypdf` (the default) or `mupdf`.
+- `--extractor` / `-e`: `pypdf` (the default), `mupdf`, or `docling`.
 - `--provider` / `-p`: LLM provider for summary mode. If omitted, the value of
   `LLM_PROVIDER` is used, falling back to `gemini`.
 
@@ -72,6 +72,17 @@ use `quality.is_likely_garbled` to route suspect documents for review or OCR.
 MuPDF extraction remains useful for Markdown-oriented output, but currently
 returns an empty page map because that backend does not preserve page
 boundaries through this API.
+
+The `docling` backend produces structured Markdown — heading hierarchy,
+reconstructed tables, correct multi-column reading order — with a
+`<!-- page N -->` comment marker at the start of every page, and recovers
+scanned pages through built-in OCR. Its `page_offsets` point at each page's
+marker. Because it pulls in a large model stack, it is packaged as an
+optional extra:
+
+```sh
+pip install 'pdf-converter[docling]'
+```
 
 ## Development
 
