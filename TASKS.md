@@ -30,12 +30,13 @@ refactoring latitude exists.
       `docling[rapidocr]` — RapidOCR is itself an optional extra of docling,
       and plain `docling` would not reproduce the OCR behaviour measured in
       the rationale.
-- [ ] Tag `v0.1.0`; verified 2026-07-16 against a clean digital PDF (with an
-      empty middle page) and a pure rasterized scan of the same content —
-      markers, offsets, and OCR recovery all confirmed end-to-end. The
-      original corpus PDFs (`/mnt/i/RPG/...`) were unreachable (drvfs mount
-      absent), so a spot-check against a real corpus doc remains worthwhile
-      once the drive is remounted.
+- [ ] Tag `v0.1.0`; verified 2026-07-16 against synthetic fixtures (clean
+      3-pager with an empty middle page; rasterized zero-text scan of the
+      same content) **and** the two real corpus PDFs from the rationale's
+      measurements: Bad Light (29,117 chars vs the RFC's 28,987 — the delta
+      is the 8 page markers — 19 headings, 49s) and The Twilight Tomb pure
+      scan (147,578 chars vs ~147k, all seven named entities OCR-recovered,
+      178s). Markers and offsets held on all four documents.
 
 ## 1. Decide on publishing, then act on it
 
