@@ -30,7 +30,8 @@ refactoring latitude exists.
       `docling[rapidocr]` — RapidOCR is itself an optional extra of docling,
       and plain `docling` would not reproduce the OCR behaviour measured in
       the rationale.
-- [ ] Tag `v0.1.0`; verified 2026-07-16 against synthetic fixtures (clean
+- [x] Tag `v0.1.0` (tagged 2026-07-16 at `cc76f47`, PRs #1 and #2);
+      verified 2026-07-16 against synthetic fixtures (clean
       3-pager with an empty middle page; rasterized zero-text scan of the
       same content) **and** the two real corpus PDFs from the rationale's
       measurements: Bad Light (29,117 chars vs the RFC's 28,987 — the delta
