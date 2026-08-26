@@ -108,6 +108,10 @@ The five canonical triage labels are used verbatim: `needs-triage`,
 Single-context: one `CONTEXT.md` and `docs/adr/` at the repo root (created
 lazily by `/domain-modeling`). See `docs/agents/domain.md`.
 
+### ADR format
+
+`.claude/skills/lib/templates/adr.md` is the authoritative ADR format for this project.
+
 ## Documentation and releases
 
 Update `README.md` and `docs/` when a user-visible CLI option, extractor,

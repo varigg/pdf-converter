@@ -19,6 +19,8 @@ downloads/
 eggs/
 .eggs/
 lib/
+# the venv-oriented lib/ rule above must not swallow ADDW's shared script layer
+!.claude/skills/lib/
 lib64/
 parts/
 sdist/

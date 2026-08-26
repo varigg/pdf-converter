@@ -1,6 +1,6 @@
 [project]
 name = "pdf-converter"
-version = "0.0.1"
+version = "0.1.1"
 description = "A command line utility to summarize PDF files."
 authors = [{ name = "Steffen Vulpius", email = "steffen.vulpius@gmail.com" }]
 readme = "README.md"
