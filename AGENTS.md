@@ -7,9 +7,9 @@ Markdown-compatible text and, optionally, producing LLM summaries. The
 installed entry point is `pdf-converter`, which calls
 `pdf_converter.converter:main`.
 
-This repository is newly initialized. `TASKS.md` is the authoritative
-handoff for outstanding product and publishing work; read it before taking on
-feature work. In particular, `adventure-library` consumes
+Work state lives on the issue tracker (see "Agent skills" below), never in
+tree files; check the tracker before taking on feature work. In particular,
+`adventure-library` consumes
 `pdf_converter.extractor.extract_text_from_pdf`, so preserve that callable's
 signature and plain-string return contract unless the downstream consumer is
 updated in the same coordinated change.
@@ -28,7 +28,6 @@ updated in the same coordinated change.
 - `tests/` — pytest unit tests; use mocks for filesystem, PDF backends, and
   all networked LLM calls.
 - `docs/` and `mkdocs.yml` — MkDocs site.
-- `TASKS.md` — current handoff, known dependencies, and safety context.
 
 ## Setup and common commands
 
