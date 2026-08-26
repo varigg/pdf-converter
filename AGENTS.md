@@ -90,6 +90,24 @@ baseline. Report any pre-existing failures separately. Check `git status`
 before staging: this project has previously accumulated generated output from
 real documents.
 
+## Agent skills
+
+### Issue tracker
+
+Issues live in this repo's GitHub Issues (`varigg/pdf-converter`), operated
+via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical triage labels are used verbatim: `needs-triage`,
+`needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See
+`docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` and `docs/adr/` at the repo root (created
+lazily by `/domain-modeling`). See `docs/agents/domain.md`.
+
 ## Documentation and releases
 
 Update `README.md` and `docs/` when a user-visible CLI option, extractor,
