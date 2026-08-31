@@ -10,13 +10,11 @@ environment coverage on compatibility-sensitive changes.
 
 ## Writing conventions
 
-- **Everything external is mocked**: filesystem effects, PDF backend
-  libraries, and all networked LLM calls. No real LLM request ever runs in a
-  test, and no real personal PDF (or its extracted text) is committed as a
+- **Everything external is mocked**: filesystem effects and PDF backend
+  libraries. No real personal PDF (or its extracted text) is committed as a
   fixture — use synthetic data.
 - Exercise the seams the code exposes for testing: inject strategies into
-  `PDFExtractor`, inject provider/tracker/sleep into `LLMService`, and drive
-  the CLI through `main(argv)`.
+  `PDFExtractor` and drive the CLI through `main(argv)`.
 - Assertions on error paths expect the typed `PDFConverterError` subclasses,
   not bare exceptions.
 - `assert` statements are fine (ruff's S101 is ignored for `tests/*`).
