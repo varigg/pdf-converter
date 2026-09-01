@@ -124,7 +124,7 @@ CI runs `make check` and the test/typing matrix on every push.
 
 ## Error-handling strategy
 
-Backend and provider errors are caught at the layer boundary and re-raised as
+Backend errors are caught at the layer boundary and re-raised as
 the appropriate `PDFConverterError` subclass with a human-readable message,
 chaining the original (`raise ... from error`). The CLI is the only place
 that terminates the process.
