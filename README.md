@@ -1,7 +1,8 @@
 # pdf-converter
 
 `pdf-converter` extracts text from PDF files. It is useful both as a
-command-line tool and as a small Python library.
+command-line tool and as a small Python library. To summarize a PDF, feed the
+extracted Markdown to any LLM.
 
 ## Requirements
 
@@ -46,7 +47,7 @@ Output is written beside the command's working directory as
 
 ### Options
 
-- `--extractor` / `-e`: `pypdf` (the default), `mupdf`, or `docling`.
+- `--extractor` / `-e`: `pypdf` (the default) or `docling`.
 
 ## Python API
 
@@ -66,9 +67,6 @@ For ingestion pipelines that need provenance and quality signals, use
 maps each one-based PDF page number to the character offset where that page
 starts. Its `quality` includes a garble score and related metrics; callers can
 use `quality.is_likely_garbled` to route suspect documents for review or OCR.
-MuPDF extraction remains useful for Markdown-oriented output, but currently
-returns an empty page map because that backend does not preserve page
-boundaries through this API.
 
 The optional `docling` backend produces structured Markdown — heading hierarchy,
 reconstructed tables, correct multi-column reading order — with a

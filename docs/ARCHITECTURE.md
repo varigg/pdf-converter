@@ -27,8 +27,8 @@ The system has two layers:
 - **Language**: Python ≥ 3.10 (CI matrix runs 3.10–3.13), `src/` package
   layout, built with hatchling.
 - **Package management**: uv, with a committed `uv.lock`.
-- **PDF backends**: `pypdf` (plain text), `pymupdf4llm` (Markdown), and
-  `docling` as an optional extra (`pdf-converter[docling]`, structured
+- **PDF backends**: `pypdf` (plain text) and `docling` as an optional extra
+  (`pdf-converter[docling]`, structured
   Markdown with per-page markers and OCR for scans).
 - **Quality tooling**: ruff (lint + format), ty (type checking), pytest with
   branch coverage, deptry, pre-commit, tox-uv for the version matrix.
@@ -91,7 +91,6 @@ contract changes and need a coordinated downstream update.
 | Backend | Output | Pages | Notes |
 | --- | --- | --- | --- |
 | `pypdf` | plain text | offsets preserved | default |
-| `mupdf` | Markdown (`pymupdf4llm`) | not preserved (`()`) | |
 | `docling` | Markdown with `<!-- page N -->` markers | offsets preserved | optional extra; OCR for scans, including picture-classified regions |
 
 Adding a backend means: a strategy pair (plain + result), registry entries,
