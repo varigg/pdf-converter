@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/github/license/varigg/pdf-converter)](https://img.shields.io/github/license/varigg/pdf-converter)
 
 `pdf-converter` extracts PDF text to Markdown-compatible output. It supports
-the `pypdf`, MuPDF, and optional Docling extraction backends, plus a Python
+the `pypdf` and optional Docling extraction backends, plus a Python
 metadata API for page offsets and extraction-quality signals.
 
 ## Quick start
@@ -41,7 +41,6 @@ pip install 'pdf-converter[docling]'
 | Backend | Intended use | Page provenance |
 | --- | --- | --- |
 | `pypdf` | Fast, lightweight plain-text extraction; the default. | One offset per source page. |
-| `mupdf` | Markdown-oriented extraction. | Not preserved by this API. |
 | `docling` | Structured Markdown, tables, multi-column documents, and scans with OCR. | `<!-- page N -->` marker and offset for every page, including empty pages. |
 
 Use an extractor from the command line with `--extractor`; `pypdf` remains the

@@ -104,23 +104,6 @@ def pypdf_strategy(pdf_path: str) -> str:
     return pypdf_extraction_result(pdf_path).text
 
 
-def mupdf_strategy(pdf_path: str) -> str:
-    """Extraction strategy using pymupdf4llm."""
-    import pymupdf4llm
-
-    try:
-        return str(pymupdf4llm.to_markdown(pdf_path))
-    except Exception as error:
-        message = f"pymupdf4llm could not extract text from '{pdf_path}'"
-        raise ExtractionError(message) from error
-
-
-def mupdf_extraction_result(pdf_path: str) -> ExtractionResult:
-    """Extract MuPDF Markdown and attach quality metadata when pages are unavailable."""
-    text = mupdf_strategy(pdf_path)
-    return ExtractionResult(text=text, page_offsets=(), quality=calculate_extraction_quality(text))
-
-
 def docling_extraction_result(pdf_path: str) -> ExtractionResult:
     """Extract structured Markdown with per-page markers using docling.
 
@@ -171,12 +154,10 @@ def docling_strategy(pdf_path: str) -> str:
 
 EXTRACTION_STRATEGIES: dict[str, ExtractionStrategy] = {
     "pypdf": pypdf_strategy,
-    "mupdf": mupdf_strategy,
     "docling": docling_strategy,
 }
 EXTRACTION_RESULT_STRATEGIES = {
     "pypdf": pypdf_extraction_result,
-    "mupdf": mupdf_extraction_result,
     "docling": docling_extraction_result,
 }
 SUPPORTED_EXTRACTORS: tuple[str, ...] = tuple(EXTRACTION_STRATEGIES)

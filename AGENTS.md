@@ -3,8 +3,7 @@
 ## Project purpose
 
 `pdf-converter` is a Python 3.10+ command-line package for turning PDFs into
-Markdown-compatible text and, optionally, producing LLM summaries. The
-installed entry point is `pdf-converter`, which calls
+Markdown-compatible text. The installed entry point is `pdf-converter`, which calls
 `pdf_converter.converter:main`.
 
 Work state lives on the issue tracker (see "Agent skills" below), never in
@@ -20,13 +19,7 @@ updated in the same coordinated change.
   extraction convenience function.
 - `src/pdf_converter/converter.py` — CLI argument parsing, output writing,
   and optional movement of source PDFs.
-- `src/pdf_converter/summarizer.py` — prompt construction and LLM service
-  orchestration.
-- `src/pdf_converter/services/` — provider clients, retries, and local usage
-  accounting. Keep provider-specific HTTP/SDK details here rather than in the
-  CLI or summarizer.
-- `tests/` — pytest unit tests; use mocks for filesystem, PDF backends, and
-  all networked LLM calls.
+- `tests/` — pytest unit tests; use mocks for filesystem and PDF backends.
 - `docs/` and `mkdocs.yml` — MkDocs site.
 
 ## Setup and common commands
@@ -63,12 +56,6 @@ the resulting diff before including it in a change. Tox defines the Python
 - Keep extraction backends behind an `ExtractionStrategy` and select them in
   `get_extractor`; add matching CLI choices, dependencies, tests, and user
   documentation together.
-- Keep API keys out of source, test fixtures, command output, and committed
-  files. Providers obtain keys from environment variables. Never perform real
-  LLM requests in tests.
-- `UsageTracker` writes `usage_stats.json` to the platform user-state
-  directory. Do not redirect it into the repository or add usage data to
-  commits.
 - Treat PDFs and generated Markdown as potentially private. Do not add real
   personal PDFs or their extracted contents as fixtures. Prefer synthetic
   data and write ad-hoc outputs outside the repository.
@@ -77,11 +64,9 @@ the resulting diff before including it in a change. Tox defines the Python
 
 ## Change hygiene
 
-The supported extraction backends are `pypdf` and `mupdf`. Keep the Python
+The supported extraction backends are `pypdf` and `docling`. Keep the Python
 registry, CLI, batch script, dependencies, tests, and documentation aligned
-when adding or removing a backend. The supported providers are defined by the
-registry in `services/llm_client_factory.py`; derive Python-facing choices
-from that registry rather than copying the list.
+when adding or removing a backend.
 
 Keep changes narrow and avoid unrelated cleanup. After changes, run the
 smallest relevant tests, then the broader checks that can run in the current
@@ -114,7 +99,7 @@ lazily by `/domain-modeling`). See `docs/agents/domain.md`.
 ## Documentation and releases
 
 Update `README.md` and `docs/` when a user-visible CLI option, extractor,
-provider, output format, or public API changes. The repository and GitHub
+output format, or public API changes. The repository and GitHub
 release tag are live; documentation remains in the repository rather than
 being deployed to GitHub Pages. Verify CI for every pushed change and create a
 new tag only for an intentional release.

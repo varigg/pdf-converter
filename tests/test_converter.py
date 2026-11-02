@@ -65,11 +65,16 @@ def test_main_accepts_argument_list_without_program_name(
     mock_get_extractor: MagicMock,
     mock_run_conversion: MagicMock,
 ) -> None:
-    main(["document.pdf", "--extractor", "mupdf"])
+    main(["document.pdf", "--extractor", "docling"])
 
-    mock_get_extractor.assert_called_once_with("mupdf")
+    mock_get_extractor.assert_called_once_with("docling")
     mock_run_conversion.assert_called_once_with(
         "document.pdf",
         None,
         mock_get_extractor.return_value,
     )
+
+
+def test_main_rejects_removed_mupdf_extractor() -> None:
+    with pytest.raises(SystemExit):
+        main(["document.pdf", "--extractor", "mupdf"])

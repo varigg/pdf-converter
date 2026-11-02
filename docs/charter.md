@@ -17,15 +17,15 @@ manual, one-off conversions.
   coordinate with the consumer in the same change.
 - **Demand-driven scope.** Work arrives as filed issues plus repo hygiene —
   no independent roadmap.
-- **Pluggable by registry.** Backends and providers extend through
+- **Pluggable by registry.** Backends extend through
   registries, never special cases.
-- **Offline-testable.** No real PDFs, no real LLM calls in tests.
+- **Offline-testable.** No real PDFs in tests.
 - **Privacy by default.** Documents are treated as private; nothing
   extracted lands in the repository.
 
 ## Scope
 
-- PDF-to-Markdown text extraction (pypdf, mupdf, docling backends) with
+- PDF-to-Markdown text extraction (pypdf and docling backends) with
   page-offset and quality metadata.
 - A small CLI and batch script for manual conversions.
 - Serving adventure-library's extraction needs as they are filed.
