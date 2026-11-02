@@ -1,7 +1,7 @@
 [project]
 name = "pdf-converter"
 version = "0.1.1"
-description = "A command line utility to summarize PDF files."
+description = "Extract Markdown and metadata from PDF files."
 authors = [{ name = "Steffen Vulpius", email = "steffen.vulpius@gmail.com" }]
 readme = "README.md"
 keywords = ['python']
@@ -17,7 +17,6 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-    "pymupdf4llm>=0.0.27",
     "pypdf>=6.7.1",
 ]
 

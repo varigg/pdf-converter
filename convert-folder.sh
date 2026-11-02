@@ -9,7 +9,7 @@ Converts all PDF files in <folder> to Markdown using pdf-converter.
 Output .md files are written to the current working directory.
 
 Options:
-  -e, --extractor <lib>      pypdf|mupdf  (default: pypdf)
+  -e, --extractor <lib>      pypdf|docling  (default: pypdf)
   -r, --recursive            also search sub-directories
   -h, --help                 show this help
 EOF

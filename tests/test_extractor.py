@@ -14,7 +14,6 @@ from pdf_converter.extractor import (
     extract_pdf_with_metadata,
     extract_text_from_pdf,
     get_extractor,
-    mupdf_strategy,
     pypdf_strategy,
 )
 
@@ -85,14 +84,6 @@ def test_pypdf_strategy_wraps_backend_errors() -> None:
         pypdf_strategy("dummy.pdf")
 
 
-@patch("pymupdf4llm.to_markdown")
-def test_mupdf_strategy(mock_to_markdown: MagicMock) -> None:
-    mock_to_markdown.return_value = "MuPDF markdown"
-
-    assert mupdf_strategy("dummy.pdf") == "MuPDF markdown"
-    mock_to_markdown.assert_called_once_with("dummy.pdf")
-
-
 def test_docling_extraction_emits_page_markers_and_offsets() -> None:
     document = MagicMock()
     document.pages = {1: MagicMock(), 2: MagicMock(), 3: MagicMock()}
@@ -156,9 +147,8 @@ def test_pdf_extractor_delegates_to_strategy() -> None:
 
 
 def test_supported_extractors_match_factory() -> None:
-    assert SUPPORTED_EXTRACTORS == ("pypdf", "mupdf", "docling")
+    assert SUPPORTED_EXTRACTORS == ("pypdf", "docling")
     assert get_extractor("PYPDF").strategy is pypdf_strategy
-    assert get_extractor("mupdf").strategy is mupdf_strategy
     assert get_extractor("DOCLING").strategy is docling_strategy
 
 
@@ -171,8 +161,8 @@ def test_get_extractor_rejects_unknown_backend() -> None:
 def test_extract_text_from_pdf(mock_get_extractor: MagicMock) -> None:
     mock_get_extractor.return_value.extract.return_value = "Extracted text"
 
-    assert extract_text_from_pdf("dummy.pdf", "mupdf") == "Extracted text"
-    mock_get_extractor.assert_called_once_with("mupdf")
+    assert extract_text_from_pdf("dummy.pdf", "DOCLING") == "Extracted text"
+    mock_get_extractor.assert_called_once_with("DOCLING")
     mock_get_extractor.return_value.extract.assert_called_once_with("dummy.pdf")
 
 
@@ -182,6 +172,6 @@ def test_extract_pdf_with_metadata_uses_selected_backend(mock_strategies: MagicM
     strategy = MagicMock(return_value=expected)
     mock_strategies.get.return_value = strategy
 
-    assert extract_pdf_with_metadata("dummy.pdf", "MUPDF") is expected
-    mock_strategies.get.assert_called_once_with("mupdf")
+    assert extract_pdf_with_metadata("dummy.pdf", "DOCLING") is expected
+    mock_strategies.get.assert_called_once_with("docling")
     strategy.assert_called_once_with("dummy.pdf")
