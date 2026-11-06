@@ -222,6 +222,17 @@ def test_docling_ocr_strategy_reports_missing_optional_dependency() -> None:
         docling_ocr_strategy("dummy.pdf")
 
 
+def test_docling_ocr_strategy_reports_missing_ocr_engine() -> None:
+    converter_class = MagicMock()
+    converter_class.return_value.convert.side_effect = ImportError("rapidocr is not installed")
+
+    with (
+        patch.dict(sys.modules, _fake_docling_modules(converter_class)),
+        pytest.raises(ExtractionError, match=r"pdf-converter\[docling\]"),
+    ):
+        docling_ocr_strategy("dummy.pdf")
+
+
 def test_docling_ocr_strategy_wraps_backend_errors() -> None:
     converter_class = MagicMock()
     converter_class.return_value.convert.side_effect = RuntimeError("conversion failed")

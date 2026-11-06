@@ -113,14 +113,7 @@ def _run_docling(pdf_path: str, *, force_full_page_ocr: bool) -> ExtractionResul
             RapidOcrOptions,
         )
         from docling.document_converter import DocumentConverter, PdfFormatOption  # ty: ignore[unresolved-import]
-    except ImportError as error:
-        message = (
-            "The 'docling' extractor requires optional dependencies. "
-            "Install them with: pip install 'pdf-converter[docling]'"
-        )
-        raise ExtractionError(message) from error
 
-    try:
         if force_full_page_ocr:
             # Pinned, not OcrAutoOptions: with no engine installed, auto only logs a warning and
             # returns the garbled text layer as a success; RapidOCR raises instead.
@@ -154,6 +147,12 @@ def _run_docling(pdf_path: str, *, force_full_page_ocr: bool) -> ExtractionResul
             page_offsets=tuple(page_offsets),
             quality=calculate_extraction_quality(text, page_count=len(page_offsets)),
         )
+    except ImportError as error:
+        message = (
+            "The 'docling' extractor requires optional dependencies. "
+            "Install them with: pip install 'pdf-converter[docling]'"
+        )
+        raise ExtractionError(message) from error
     except Exception as error:
         message = f"docling could not extract text from '{pdf_path}'"
         raise ExtractionError(message) from error
