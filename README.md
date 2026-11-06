@@ -47,7 +47,7 @@ Output is written beside the command's working directory as
 
 ### Options
 
-- `--extractor` / `-e`: `pypdf` (the default) or `docling`.
+- `--extractor` / `-e`: `pypdf` (the default), `docling`, or `docling-ocr`.
 
 ## Python API
 
@@ -74,6 +74,10 @@ reconstructed tables, correct multi-column reading order — with a
 scanned pages through built-in OCR. Its `page_offsets` point at each page's
 marker, including empty pages. It is substantially heavier than the default
 backends because it includes local models.
+
+Use the `docling-ocr` Strategy when the source PDF's text layer is likely
+garbled (`quality.is_likely_garbled` is true). It ignores the text layer and
+OCRs every page image, so it is slower than the standard `docling` Strategy.
 
 ## Development
 
