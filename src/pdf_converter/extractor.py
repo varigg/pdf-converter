@@ -104,18 +104,15 @@ def pypdf_strategy(pdf_path: str) -> str:
     return pypdf_extraction_result(pdf_path).text
 
 
-def _docling_extraction_result(pdf_path: str, *, force_full_page_ocr: bool) -> ExtractionResult:
+def _run_docling(pdf_path: str, *, force_full_page_ocr: bool) -> ExtractionResult:
     """Extract structured Markdown with per-page markers using docling."""
     try:
-        if force_full_page_ocr:
-            from docling.datamodel.base_models import InputFormat  # ty: ignore[unresolved-import]
-            from docling.datamodel.pipeline_options import (  # ty: ignore[unresolved-import]
-                OcrAutoOptions,
-                PdfPipelineOptions,
-            )
-            from docling.document_converter import DocumentConverter, PdfFormatOption  # ty: ignore[unresolved-import]
-        else:
-            from docling.document_converter import DocumentConverter  # ty: ignore[unresolved-import]
+        from docling.datamodel.base_models import InputFormat  # ty: ignore[unresolved-import]
+        from docling.datamodel.pipeline_options import (  # ty: ignore[unresolved-import]
+            PdfPipelineOptions,
+            RapidOcrOptions,
+        )
+        from docling.document_converter import DocumentConverter, PdfFormatOption  # ty: ignore[unresolved-import]
     except ImportError as error:
         message = (
             "The 'docling' extractor requires optional dependencies. "
@@ -125,12 +122,14 @@ def _docling_extraction_result(pdf_path: str, *, force_full_page_ocr: bool) -> E
 
     try:
         if force_full_page_ocr:
+            # Pinned, not OcrAutoOptions: with no engine installed, auto only logs a warning and
+            # returns the garbled text layer as a success; RapidOCR raises instead.
             converter = DocumentConverter(
                 format_options={
                     InputFormat.PDF: PdfFormatOption(
                         pipeline_options=PdfPipelineOptions(
                             do_ocr=True,
-                            ocr_options=OcrAutoOptions(force_full_page_ocr=True),
+                            ocr_options=RapidOcrOptions(force_full_page_ocr=True),
                         )
                     )
                 }
@@ -170,12 +169,12 @@ def docling_extraction_result(pdf_path: str) -> ExtractionResult:
     text layer are recovered through docling's built-in OCR, including text
     nested inside picture-classified regions such as maps and handouts.
     """
-    return _docling_extraction_result(pdf_path, force_full_page_ocr=False)
+    return _run_docling(pdf_path, force_full_page_ocr=False)
 
 
 def docling_ocr_extraction_result(pdf_path: str) -> ExtractionResult:
     """Extract structured Markdown after forcing OCR over every PDF page."""
-    return _docling_extraction_result(pdf_path, force_full_page_ocr=True)
+    return _run_docling(pdf_path, force_full_page_ocr=True)
 
 
 def docling_strategy(pdf_path: str) -> str:

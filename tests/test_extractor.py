@@ -24,7 +24,7 @@ def _fake_docling_modules(converter_class: MagicMock) -> dict[str, ModuleType]:
     base_models_module = ModuleType("docling.datamodel.base_models")
     base_models_module.InputFormat = MagicMock(name="InputFormat")  # type: ignore[attr-defined]
     pipeline_options_module = ModuleType("docling.datamodel.pipeline_options")
-    pipeline_options_module.OcrAutoOptions = MagicMock(name="OcrAutoOptions")  # type: ignore[attr-defined]
+    pipeline_options_module.RapidOcrOptions = MagicMock(name="RapidOcrOptions")  # type: ignore[attr-defined]
     pipeline_options_module.PdfPipelineOptions = MagicMock(name="PdfPipelineOptions")  # type: ignore[attr-defined]
     datamodel_module = ModuleType("docling.datamodel")
     datamodel_module.base_models = base_models_module  # type: ignore[attr-defined]
@@ -160,17 +160,28 @@ def test_docling_ocr_requests_full_page_ocr() -> None:
     base_models_module = fake_modules["docling.datamodel.base_models"]
     pipeline_options_module = fake_modules["docling.datamodel.pipeline_options"]
     converter_module = fake_modules["docling.document_converter"]
-    ocr_auto_options = pipeline_options_module.OcrAutoOptions
+    rapid_ocr_options = pipeline_options_module.RapidOcrOptions
     pdf_pipeline_options = pipeline_options_module.PdfPipelineOptions
     pdf_format_option = converter_module.PdfFormatOption
     input_format = base_models_module.InputFormat
 
-    ocr_auto_options.assert_called_once_with(force_full_page_ocr=True)
-    pdf_pipeline_options.assert_called_once_with(do_ocr=True, ocr_options=ocr_auto_options.return_value)
+    rapid_ocr_options.assert_called_once_with(force_full_page_ocr=True)
+    pdf_pipeline_options.assert_called_once_with(do_ocr=True, ocr_options=rapid_ocr_options.return_value)
     pdf_format_option.assert_called_once_with(pipeline_options=pdf_pipeline_options.return_value)
     converter_class.assert_called_once_with(
         format_options={input_format.PDF: pdf_format_option.return_value},
     )
+
+
+def test_extract_text_from_pdf_selects_docling_ocr_by_name() -> None:
+    document = MagicMock()
+    document.pages = {1: MagicMock()}
+    document.export_to_markdown.return_value = "Only page"
+    converter_class = MagicMock()
+    converter_class.return_value.convert.return_value.document = document
+
+    with patch.dict(sys.modules, _fake_docling_modules(converter_class)):
+        assert extract_text_from_pdf("dummy.pdf", "docling-ocr") == "<!-- page 1 -->\nOnly page\n\n"
 
 
 def test_docling_strategy_returns_marked_markdown() -> None:
