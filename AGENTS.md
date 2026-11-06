@@ -64,7 +64,7 @@ the resulting diff before including it in a change. Tox defines the Python
 
 ## Change hygiene
 
-The supported extraction backends are `pypdf` and `docling`. Keep the Python
+The supported extraction backends are `pypdf`, `docling`, and `docling-ocr`. Keep the Python
 registry, CLI, batch script, dependencies, tests, and documentation aligned
 when adding or removing a backend.
 

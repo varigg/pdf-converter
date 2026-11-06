@@ -104,18 +104,18 @@ def pypdf_strategy(pdf_path: str) -> str:
     return pypdf_extraction_result(pdf_path).text
 
 
-def docling_extraction_result(pdf_path: str) -> ExtractionResult:
-    """Extract structured Markdown with per-page markers using docling.
-
-    Each source page contributes a ``<!-- page N -->`` comment marker followed
-    by that page's Markdown export, so downstream consumers can attribute any
-    span of the output to a one-based PDF page. Empty pages keep their marker,
-    preserving the ``page_offsets`` boundary contract. Scanned pages without a
-    text layer are recovered through docling's built-in OCR, including text
-    nested inside picture-classified regions such as maps and handouts.
-    """
+def _docling_extraction_result(pdf_path: str, *, force_full_page_ocr: bool) -> ExtractionResult:
+    """Extract structured Markdown with per-page markers using docling."""
     try:
-        from docling.document_converter import DocumentConverter  # ty: ignore[unresolved-import]
+        if force_full_page_ocr:
+            from docling.datamodel.base_models import InputFormat  # ty: ignore[unresolved-import]
+            from docling.datamodel.pipeline_options import (  # ty: ignore[unresolved-import]
+                OcrAutoOptions,
+                PdfPipelineOptions,
+            )
+            from docling.document_converter import DocumentConverter, PdfFormatOption  # ty: ignore[unresolved-import]
+        else:
+            from docling.document_converter import DocumentConverter  # ty: ignore[unresolved-import]
     except ImportError as error:
         message = (
             "The 'docling' extractor requires optional dependencies. "
@@ -124,7 +124,20 @@ def docling_extraction_result(pdf_path: str) -> ExtractionResult:
         raise ExtractionError(message) from error
 
     try:
-        document = DocumentConverter().convert(pdf_path).document
+        if force_full_page_ocr:
+            converter = DocumentConverter(
+                format_options={
+                    InputFormat.PDF: PdfFormatOption(
+                        pipeline_options=PdfPipelineOptions(
+                            do_ocr=True,
+                            ocr_options=OcrAutoOptions(force_full_page_ocr=True),
+                        )
+                    )
+                }
+            )
+        else:
+            converter = DocumentConverter()
+        document = converter.convert(pdf_path).document
         segments: list[str] = []
         page_offsets: list[int] = []
         character_offset = 0
@@ -147,18 +160,43 @@ def docling_extraction_result(pdf_path: str) -> ExtractionResult:
         raise ExtractionError(message) from error
 
 
+def docling_extraction_result(pdf_path: str) -> ExtractionResult:
+    """Extract structured Markdown with per-page markers using docling.
+
+    Each source page contributes a ``<!-- page N -->`` comment marker followed
+    by that page's Markdown export, so downstream consumers can attribute any
+    span of the output to a one-based PDF page. Empty pages keep their marker,
+    preserving the ``page_offsets`` boundary contract. Scanned pages without a
+    text layer are recovered through docling's built-in OCR, including text
+    nested inside picture-classified regions such as maps and handouts.
+    """
+    return _docling_extraction_result(pdf_path, force_full_page_ocr=False)
+
+
+def docling_ocr_extraction_result(pdf_path: str) -> ExtractionResult:
+    """Extract structured Markdown after forcing OCR over every PDF page."""
+    return _docling_extraction_result(pdf_path, force_full_page_ocr=True)
+
+
 def docling_strategy(pdf_path: str) -> str:
     """Extraction strategy using docling."""
     return docling_extraction_result(pdf_path).text
 
 
+def docling_ocr_strategy(pdf_path: str) -> str:
+    """Extraction strategy using forced full-page OCR through docling."""
+    return docling_ocr_extraction_result(pdf_path).text
+
+
 EXTRACTION_STRATEGIES: dict[str, ExtractionStrategy] = {
     "pypdf": pypdf_strategy,
     "docling": docling_strategy,
+    "docling-ocr": docling_ocr_strategy,
 }
 EXTRACTION_RESULT_STRATEGIES = {
     "pypdf": pypdf_extraction_result,
     "docling": docling_extraction_result,
+    "docling-ocr": docling_ocr_extraction_result,
 }
 SUPPORTED_EXTRACTORS: tuple[str, ...] = tuple(EXTRACTION_STRATEGIES)
 

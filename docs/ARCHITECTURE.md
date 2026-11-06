@@ -92,6 +92,7 @@ contract changes and need a coordinated downstream update.
 | --- | --- | --- | --- |
 | `pypdf` | plain text | offsets preserved | default |
 | `docling` | Markdown with `<!-- page N -->` markers | offsets preserved | optional extra; OCR for scans, including picture-classified regions |
+| `docling-ocr` | Markdown with `<!-- page N -->` markers | offsets preserved | optional extra; ignores the PDF text layer and OCRs every page image |
 
 Adding a backend means: a strategy pair (plain + result), registry entries,
 matching CLI choice (derived automatically), optional dependency wiring,

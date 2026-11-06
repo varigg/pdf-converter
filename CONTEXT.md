@@ -12,7 +12,7 @@ repo's sole capability.
 _Avoid_: conversion, summarization, mode
 
 **Strategy**:
-A named, selectable extraction backend (`pypdf`, `docling`).
+A named, selectable extraction backend (`pypdf`, `docling`, `docling-ocr`).
 _Avoid_: mode, engine, library
 
 **Quality signals**:

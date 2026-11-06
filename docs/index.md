@@ -42,9 +42,12 @@ pip install 'pdf-converter[docling]'
 | --- | --- | --- |
 | `pypdf` | Fast, lightweight plain-text extraction; the default. | One offset per source page. |
 | `docling` | Structured Markdown, tables, multi-column documents, and scans with OCR. | `<!-- page N -->` marker and offset for every page, including empty pages. |
+| `docling-ocr` | PDFs whose text layer is likely garbled; ignores it and OCRs every page image. | `<!-- page N -->` marker and offset for every page, including empty pages. |
 
 Use an extractor from the command line with `--extractor`; `pypdf` remains the
 default. Docling also includes OCR text nested in picture-classified regions.
+Use the `docling-ocr` Strategy when `quality.is_likely_garbled` identifies a
+suspect text layer; it is slower because every page is OCRed.
 
 ## Python API
 
