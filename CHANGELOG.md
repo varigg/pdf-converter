@@ -3,6 +3,15 @@
 Release history, newest first. Maintained by the ADDW release skills; humans
 read it, agents don't.
 
+## v1.1.0 — 2026-11-10
+
+### Features
+- feat: add docling-ocr forced full-page OCR strategy (#16)
+
+### Fixes
+- fix: keep the install hint when the OCR engine is missing (#16)
+- fix: pin RapidOCR so docling-ocr fails loudly without an engine (#16)
+
 ## v1.0.0 — 2026-11-02
 
 ### Breaking

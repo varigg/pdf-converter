@@ -1,6 +1,6 @@
 [project]
 name = "pdf-converter"
-version = "1.0.0"
+version = "1.1.0"
 description = "Extract Markdown and metadata from PDF files."
 authors = [{ name = "Steffen Vulpius", email = "steffen.vulpius@gmail.com" }]
 readme = "README.md"
